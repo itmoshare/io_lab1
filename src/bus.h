@@ -46,8 +46,9 @@ SC_MODULE(Bus)
     Bus(sc_module_name nm);
     ~Bus();
     
-    void bus_write();
-    void bus_read();
+private:
+    void handle();
+    void set(bool t1_r, bool t1_w, bool t2_r, bool t2_w, bool oc_r, bool oc_w);
 };
 
 

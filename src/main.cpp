@@ -8,8 +8,8 @@ int sc_main(int argc, char* argv[])
     
     CPU cpu("cpu");
     Bus bus("bus");
-    Timer timer1("timer1");
-    Timer timer2("timer2");
+    Timer timer1("timer1", 0);
+    Timer timer2("timer2", 0x0000000C);
     Oc oc("oc");
     
     sc_clock clk("clk", sc_time(10, SC_NS));

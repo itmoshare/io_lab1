@@ -29,10 +29,7 @@ Bus::Bus(sc_module_name nm)
     oc_rd_o.initialize(false);
     oc_wr_o.initialize(false);
 
-    SC_METHOD(bus_write);
-    sensitive << clk_i.pos();
-
-    SC_METHOD(bus_read);
+    SC_METHOD(handle);
     sensitive << clk_i.pos();
 }
 
@@ -40,14 +37,33 @@ Bus::~Bus()
 {
 }
 
-void Bus::bus_read()
+void Bus::handle()
 {
-    // if(wr_i.read())
-    //     mem[addr_bi.read()] = data_bi.read();
+    addr_bo.write(cpu_addr_bo.read());
+    data_bo.write(cpu_data_bo.read());
+
+    int32_t addr = cpu_addr_bo.read();
+    if (addr > 0 && addr < 0x0000000C)
+    {
+        set(cpu_rd_o.read(), cpu_wr_o.read(), false, false, false, false);
+    }
+    if (addr >= 0x0000000C && addr < 0x00000018)
+    {
+        set(false, false, cpu_rd_o.read(), cpu_wr_o.read(), false, false);
+    }
+    if (addr >= 0x00000018 && addr < 0x00000020)
+    {
+        set(false, false, false, false, cpu_rd_o.read(), cpu_wr_o.read());
+    }
 }
 
-void Bus::bus_write()
+void Bus::set(bool t1_r, bool t1_w, bool t2_r, bool t2_w, bool oc_r, bool oc_w)
 {
-    // if(rd_i.read())
-    //     data_bo.write(mem[addr_bi.read()]);
+    timer1_rd_o.write(t1_r);
+    timer1_wr_o.write(t1_w);
+    timer2_rd_o.write(t2_r);
+    timer2_wr_o.write(t2_w);
+    oc_rd_o.write(oc_r);
+    oc_wr_o.write(oc_w);
 }
+

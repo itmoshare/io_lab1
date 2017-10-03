@@ -22,8 +22,19 @@ SC_MODULE(Timer)
     
     SC_HAS_PROCESS(Timer);
     
-    Timer(sc_module_name nm);
+    Timer(sc_module_name nm, int addr_offset);
     ~Timer();
+
+private:
+    int addr_offset;
+
+    int tmr = 0;
+    int tval = 0;
+    int tconf = 0;
+
+    void handle();
+    void handle_write();
+    void handle_tick();
 };
 
 

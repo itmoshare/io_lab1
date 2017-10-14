@@ -22,15 +22,15 @@ SC_MODULE(Timer)
     
     SC_HAS_PROCESS(Timer);
     
-    Timer(sc_module_name nm, int addr_offset);
+    Timer(sc_module_name nm, int32_t addr_offset);
     ~Timer();
 
 private:
-    int addr_offset;
+    int32_t addr_offset;
 
-    int tmr = 0;
-    int tval = 0;
-    int tconf = 0;
+    int32_t tmr = 0;
+    int32_t tval = 0;
+    int32_t tconf = 0;
 
     void handle();
     void handle_write();

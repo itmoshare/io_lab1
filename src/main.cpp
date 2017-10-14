@@ -3,21 +3,21 @@
 #include "timer.h"
 #include "oc.h"
 
-int sc_main(int argc, char* argv[])
+int32_t sc_main(int32_t argc, char* argv[])
 {
     
     CPU cpu("cpu");
     Bus bus("bus");
     Timer timer1("timer1", 0);
     Timer timer2("timer2", 0x0000000C);
-    Oc oc("oc");
+    Oc oc("oc", 0x00000018);
     
     sc_clock clk("clk", sc_time(10, SC_NS));
 
     // CPU to Bus
-    sc_signal<int> cpu_addr_bo;
-    sc_signal<int> cpu_data_cpu_bo;
-    sc_signal<int> cpu_data_cpu_bi;
+    sc_signal<int32_t> cpu_addr_bo;
+    sc_signal<int32_t> cpu_data_cpu_bo;
+    sc_signal<int32_t> cpu_data_cpu_bi;
     sc_signal<bool> cpu_wr;
     sc_signal<bool> cpu_rd;
     
@@ -36,9 +36,9 @@ int sc_main(int argc, char* argv[])
     bus.cpu_rd_o(cpu_rd);
     
     // Bus to timers
-    sc_signal<int> timers_addr;
-    sc_signal<int> timers_data_bus_bo;
-    sc_signal<int> timers_data_bus_bi;
+    sc_signal<int32_t> timers_addr;
+    sc_signal<int32_t> timers_data_bus_bo;
+    sc_signal<int32_t> timers_data_bus_bi;
 
     sc_signal<bool> timer1_wr;
     sc_signal<bool> timer1_rd;
@@ -84,8 +84,8 @@ int sc_main(int argc, char* argv[])
     oc.wr_i(oc_wr);
 
     // Timers to oc
-    sc_signal<int> timer1_out;
-    sc_signal<int> timer2_out;
+    sc_signal<int32_t> timer1_out;
+    sc_signal<int32_t> timer2_out;
 
     timer1.out(timer1_out);
     timer2.out(timer2_out);

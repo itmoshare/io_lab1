@@ -24,8 +24,19 @@ SC_MODULE(Oc)
 
     SC_HAS_PROCESS(Oc);
     
-    Oc(sc_module_name nm);
+    Oc(sc_module_name nm, int32_t addr_offset);
     ~Oc();
+
+private:
+    int32_t addr_offset;
+    int32_t last_mode;
+
+    int32_t occonf;
+    int32_t ocr;
+
+    void handle();
+    void handle_write();
+    void handle_tick();
 };
 
 

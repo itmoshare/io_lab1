@@ -1,8 +1,9 @@
 #include "timer.h"
+#include <iostream>
 
 using namespace std;
 
-Timer::Timer(sc_module_name nm, int addr_offset)
+Timer::Timer(sc_module_name nm, int32_t addr_offset)
     :sc_module(nm),
     clk_i("clk_i"),
     addr_bi("addr_bi"),
@@ -15,7 +16,7 @@ Timer::Timer(sc_module_name nm, int addr_offset)
     data_bo.initialize(0);
     out.initialize(0);
 
-    addr_offset = addr_offset;
+    this->addr_offset = addr_offset;
 
     SC_METHOD(handle);
     sensitive << clk_i.pos();
@@ -52,8 +53,8 @@ void Timer::handle_write()
 
 void Timer::handle_tick()
 {
-    bool increment = tmr & 0x1;
-    bool stop = tmr & 0x2;
+    bool increment = !(tconf & 0x1);
+    bool stop = !(tconf & 0x2);
     if (!stop)
     {
         if (increment)
@@ -66,8 +67,8 @@ void Timer::handle_tick()
         {
             tval--;
             if (tval < 0)
-                tval = tval;
+                tval = tmr;
         }
-        
     }
+    out.write(tval);
 }

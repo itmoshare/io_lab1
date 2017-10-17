@@ -17,7 +17,7 @@ Oc::Oc(sc_module_name nm, int32_t addr_offset)
     data_bo.initialize(0);
     outs.initialize(false);
 
-    addr_offset = addr_offset;
+    this->addr_offset = addr_offset;
 
     SC_METHOD(handle);
     sensitive << clk_i.pos();

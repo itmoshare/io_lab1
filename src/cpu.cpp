@@ -24,19 +24,15 @@ CPU::~CPU()
 
 }
 
+void CPU::setAction(ActionCallback callback)
+{
+    this->callback = callback;
+}
+
 void CPU::mainThread()
 {
-    int data_size = 5;
-    
-    for(int i = 0; i < data_size; i++)
-    {
-        bus_write(i, (i+1)*2);
-    }
-    
-    for(int i = 0; i < data_size; i++)
-    {
-        bus_read(i);
-    }
+    if (callback != nullptr)
+        callback();
     
     sc_stop();
 }
@@ -55,12 +51,7 @@ int CPU::bus_read(int addr)
     wait();
     data = data_bi.read();
     
-    cout << "CPU: READ " << endl;
-    cout << "  -> addr: " << hex << addr << endl;
-    cout << "  -> data: " << hex << data << endl;
-    
     return data;
-    
 }
 
 void CPU::bus_write(int addr, int data)
@@ -72,8 +63,4 @@ void CPU::bus_write(int addr, int data)
     
     wait();
     wr_o.write(0);
-    
-    cout << "CPU: WRITE " << endl;
-    cout << "  -> addr: " << hex << addr << endl;
-    cout << "  -> data: " << hex << data << endl;
 }

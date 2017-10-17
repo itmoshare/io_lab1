@@ -43,7 +43,7 @@ void Bus::handle()
     data_bo.write(cpu_data_bo.read());
 
     int32_t addr = cpu_addr_bo.read();
-    if (addr > 0 && addr < 0x0000000C)
+    if (addr >= 0x0 && addr < 0x0000000C)
     {
         set(cpu_rd_o.read(), cpu_wr_o.read(), false, false, false, false);
     }

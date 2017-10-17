@@ -3,24 +3,110 @@
 #include "timer.h"
 #include "oc.h"
 
+static CPU cpu("cpu");
+
+static sc_clock clk("clk", sc_time(10, SC_NS));
+// CPU to Bus
+static sc_signal<int32_t> cpu_addr_bo;
+static sc_signal<int32_t> cpu_data_cpu_bo;
+static sc_signal<int32_t> cpu_data_cpu_bi;
+static sc_signal<bool> cpu_wr;
+static sc_signal<bool> cpu_rd;
+
+// Bus to timers
+static sc_signal<int32_t> timers_addr;
+static sc_signal<int32_t> timers_data_bus_bo;
+static sc_signal<int32_t> timers_data_bus_bi;
+
+static sc_signal<bool> timer1_wr;
+static sc_signal<bool> timer1_rd;
+
+static sc_signal<bool> timer2_wr;
+static sc_signal<bool> timer2_rd;
+
+static sc_signal<bool> oc_wr;
+static sc_signal<bool> oc_rd;
+
+// Timers to oc
+static sc_signal<int32_t> timer1_out;
+static sc_signal<int32_t> timer2_out;
+
+sc_signal<bool> oc_outs;
+
+// Timer 1 (dec)
+void doTestTimer1(sc_trace_file * wf)
+{
+    sc_trace(wf, clk, "clk");
+    sc_trace(wf, cpu_addr_bo, "cpu_addr_bo");
+    sc_trace(wf, cpu_data_cpu_bo, "cpu_data_cpu_bo");
+    sc_trace(wf, cpu_wr, "cpu_wr");
+
+    sc_trace(wf, timers_addr, "timers_addr");
+    sc_trace(wf, timers_data_bus_bo, "timers_data_bus_bo");
+    sc_trace(wf, timer1_wr, "timer1_wr");
+    sc_trace(wf, timer1_out, "timer1_out");
+
+    cpu.setAction([&]{
+        cpu.bus_write(0x0, 0x2);
+        cpu.bus_write(0x8, 0x3);
+        for (int i = 0; i < 5; i++, wait());
+    });
+}
+
+// Timer 2 (inc)
+void doTestTimer2(sc_trace_file * wf)
+{
+    sc_trace(wf, clk, "clk");
+    sc_trace(wf, cpu_addr_bo, "cpu_addr_bo");
+    sc_trace(wf, cpu_data_cpu_bo, "cpu_data_cpu_bo");
+    sc_trace(wf, cpu_wr, "cpu_wr");
+
+    sc_trace(wf, timers_addr, "timers_addr");
+    sc_trace(wf, timers_data_bus_bo, "timers_data_bus_bo");
+    sc_trace(wf, timer2_wr, "timer2_wr");
+    sc_trace(wf, timer2_out, "timer2_out");
+
+    cpu.setAction([&]{
+        cpu.bus_write(0xC, 0x3);
+        cpu.bus_write(0x14, 0x2);
+        for (int i = 0; i < 5; i++, wait());
+    });
+}
+
+// Output Compare mode 1
+void doOutputCompareTest1(sc_trace_file * wf)
+{
+    sc_trace(wf, clk, "clk");
+    sc_trace(wf, cpu_addr_bo, "cpu_addr_bo");
+    sc_trace(wf, cpu_data_cpu_bo, "cpu_data_cpu_bo");
+    sc_trace(wf, cpu_wr, "cpu_wr");
+
+    sc_trace(wf, timer1_out, "timer1_out");
+    sc_trace(wf, timer2_out, "timer2_out");
+    sc_trace(wf, oc_outs, "oc_outs");
+
+    cpu.setAction([&]{
+        // Output Compare
+        cpu.bus_write(0x1C, 0x2);
+        cpu.bus_write(0x18, 0x3);
+        // Timer 1 start
+        cpu.bus_write(0x0, 0x6);
+        cpu.bus_write(0x8, 0x2);
+        // Timer 2 start
+        cpu.bus_write(0xC, 0x5);
+        cpu.bus_write(0x14, 0x2);
+        for (int i = 0; i < 5; i++, wait());
+    });
+}
+
 int32_t sc_main(int32_t argc, char* argv[])
 {
-    
-    CPU cpu("cpu");
     Bus bus("bus");
     Timer timer1("timer1", 0);
     Timer timer2("timer2", 0x0000000C);
     Oc oc("oc", 0x00000018);
     
-    sc_clock clk("clk", sc_time(10, SC_NS));
-
     // CPU to Bus
-    sc_signal<int32_t> cpu_addr_bo;
-    sc_signal<int32_t> cpu_data_cpu_bo;
-    sc_signal<int32_t> cpu_data_cpu_bi;
-    sc_signal<bool> cpu_wr;
-    sc_signal<bool> cpu_rd;
-    
     cpu.clk_i(clk);
     cpu.addr_bo(cpu_addr_bo);
     cpu.data_bo(cpu_data_cpu_bo);
@@ -36,19 +122,6 @@ int32_t sc_main(int32_t argc, char* argv[])
     bus.cpu_rd_o(cpu_rd);
     
     // Bus to timers
-    sc_signal<int32_t> timers_addr;
-    sc_signal<int32_t> timers_data_bus_bo;
-    sc_signal<int32_t> timers_data_bus_bi;
-
-    sc_signal<bool> timer1_wr;
-    sc_signal<bool> timer1_rd;
-
-    sc_signal<bool> timer2_wr;
-    sc_signal<bool> timer2_rd;
-
-    sc_signal<bool> oc_wr;
-    sc_signal<bool> oc_rd;
-
     bus.addr_bo(timers_addr);
     bus.data_bo(timers_data_bus_bo);
     bus.data_bi(timers_data_bus_bi);
@@ -84,31 +157,22 @@ int32_t sc_main(int32_t argc, char* argv[])
     oc.wr_i(oc_wr);
 
     // Timers to oc
-    sc_signal<int32_t> timer1_out;
-    sc_signal<int32_t> timer2_out;
-
     timer1.out(timer1_out);
     timer2.out(timer2_out);
 
     oc.timer1_in(timer1_out);
     oc.timer2_in(timer2_out);
 
-    sc_signal<bool> oc_outs;
     oc.outs(oc_outs);
 
-    // sc_trace_file *wf = sc_create_vcd_trace_file("wave");
-    // sc_trace(wf, clk, "clk");
-    // sc_trace(wf, addr, "addr_bo");
-    // sc_trace(wf, data_cpu_bi, "data_bi");
-    // sc_trace(wf, data_cpu_bo, "data_bo");
-    // sc_trace(wf, wr, "wr");
-    // sc_trace(wf, rd, "rd");
-    // sc_trace(wf, rd, "rd");
+    sc_trace_file *wf = sc_create_vcd_trace_file("wave");
+    //doTestTimer1(wf);
+    //doTestTimer2(wf);
+    doOutputCompareTest1(wf);
 
     sc_start();
  
-    // sc_close_vcd_trace_file(wf);
+    sc_close_vcd_trace_file(wf);
     
     return(0);
-    
 }

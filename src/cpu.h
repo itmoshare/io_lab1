@@ -2,11 +2,13 @@
 #define _CPU_H
 
 #include "systemc.h"
+#include <functional>
 
 SC_MODULE(CPU)
 {
+    using ActionCallback = std::function<void(void)>; 
+
     sc_in<bool>  clk_i;
-    
     // CPU
     // адрес обращения, 32 бита
     sc_out<int32_t> addr_bo;
@@ -25,11 +27,13 @@ SC_MODULE(CPU)
     ~CPU();
     
     void mainThread();
+
+    void bus_write(int32_t addr, int32_t data);
+    int32_t  bus_read(int32_t addr);
+    
+    void setAction(ActionCallback callback);
 private:
-
-    void bus_write(int addr, int data);
-    int  bus_read(int addr);
-
+    ActionCallback callback;
 };
 
 

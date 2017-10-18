@@ -99,8 +99,41 @@ void doOutputCompareTest1(sc_trace_file * wf)
     });
 }
 
+void doTaskTest(sc_trace_file * wf, int period)
+{
+	sc_trace(wf, clk, "clk");
+	
+	sc_trace(wf, oc_outs, "oc_outs");
+	
+	cpu.setAction([&]{
+        // Output Compare
+		cpu.bus_write(0x18, period / 2);
+        cpu.bus_write(0x1C, 0x4);
+        // Timer 1 start
+        cpu.bus_write(0x0, period);
+        cpu.bus_write(0x8, 0x2);
+        for (int i = 0; i < 10; i++, wait());
+    });
+}
+
 int32_t sc_main(int32_t argc, char* argv[])
 {
+	int period = 0;
+	if (argc != 2)
+	{
+		cout << "Invalid args count" << endl;
+		return 1;
+	} 
+	else 
+	{
+		period = atoi(argv[1]);
+		if (perion % 2 != 0)
+		{
+			cout << "Period must be even" << endl;
+			return 2;
+		}
+	}
+	
     Bus bus("bus");
     Timer timer1("timer1", 0);
     Timer timer2("timer2", 0x0000000C);
@@ -168,8 +201,9 @@ int32_t sc_main(int32_t argc, char* argv[])
     sc_trace_file *wf = sc_create_vcd_trace_file("wave");
     //doTestTimer1(wf);
     //doTestTimer2(wf);
-    doOutputCompareTest1(wf);
-
+    //doOutputCompareTest1(wf);
+	doTaskTest(wf, period);
+	
     sc_start();
  
     sc_close_vcd_trace_file(wf);

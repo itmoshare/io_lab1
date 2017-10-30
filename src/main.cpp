@@ -30,6 +30,9 @@ static sc_signal<bool> oc_rd;
 // Timers to oc
 static sc_signal<int32_t> timer1_out;
 static sc_signal<int32_t> timer2_out;
+static sc_signal<bool> timer1_overflow;
+static sc_signal<bool> timer2_overflow;
+
 
 sc_signal<bool> oc_outs;
 
@@ -101,18 +104,19 @@ void doOutputCompareTest1(sc_trace_file * wf)
 
 void doTaskTest(sc_trace_file * wf, int period)
 {
+    cout << period << endl;
 	sc_trace(wf, clk, "clk");
-	
+	sc_trace(wf, timer1_out, "timer1_out");
 	sc_trace(wf, oc_outs, "oc_outs");
 	
-	cpu.setAction([&]{
+	cpu.setAction([=]{
         // Output Compare
-		cpu.bus_write(0x18, period / 2);
-        cpu.bus_write(0x1C, 0x4);
+		cpu.bus_write(0x1C, period / 3);
+        cpu.bus_write(0x18, 0x4);
         // Timer 1 start
         cpu.bus_write(0x0, period);
         cpu.bus_write(0x8, 0x2);
-        for (int i = 0; i < 10; i++, wait());
+        for (int i = 0; i < 20; i++, wait());
     });
 }
 
@@ -127,11 +131,11 @@ int32_t sc_main(int32_t argc, char* argv[])
 	else 
 	{
 		period = atoi(argv[1]);
-		if (perion % 2 != 0)
-		{
-			cout << "Period must be even" << endl;
-			return 2;
-		}
+		// if (period % 2 != 0)
+		// {
+		// 	cout << "Period must be even" << endl;
+		// 	return 2;
+		// }
 	}
 	
     Bus bus("bus");
@@ -192,9 +196,13 @@ int32_t sc_main(int32_t argc, char* argv[])
     // Timers to oc
     timer1.out(timer1_out);
     timer2.out(timer2_out);
+    timer1.overflow(timer1_overflow);
+    timer2.overflow(timer2_overflow);
 
     oc.timer1_in(timer1_out);
     oc.timer2_in(timer2_out);
+    oc.overflow_t1(timer1_overflow);
+    oc.overflow_t2(timer2_overflow);
 
     oc.outs(oc_outs);
 

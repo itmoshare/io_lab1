@@ -21,6 +21,8 @@ SC_MODULE(Oc)
     sc_in<int32_t> timer1_in;
     sc_in<int32_t> timer2_in;
     sc_out<bool> outs;
+    sc_in<bool> overflow_t1;
+    sc_in<bool> overflow_t2;
 
     SC_HAS_PROCESS(Oc);
     

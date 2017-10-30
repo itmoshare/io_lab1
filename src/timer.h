@@ -20,6 +20,8 @@ SC_MODULE(Timer)
 
     sc_out<int32_t> out;
     
+    sc_out<bool> overflow;
+
     SC_HAS_PROCESS(Timer);
     
     Timer(sc_module_name nm, int32_t addr_offset);

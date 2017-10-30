@@ -11,10 +11,12 @@ Timer::Timer(sc_module_name nm, int32_t addr_offset)
     data_bo("data_bo"),
     rd_i("rd_i"),
     wr_i("wr_i"),
-    out("out")
+    out("out"),
+    overflow("overflow")
 {
     data_bo.initialize(0);
     out.initialize(0);
+    overflow.initialize(false);
 
     this->addr_offset = addr_offset;
 
@@ -60,15 +62,25 @@ void Timer::handle_tick()
         if (increment)
         {
             tval++;
-            if (tval > tmr)
+            if (tval >= tmr) {
                 tval = 0;
+                overflow.write(true);                
+            } else {
+                overflow.write(false);
+            }
         }
         else
         {
             tval--;
-            if (tval < 0)
+            if (tval < 0) {
                 tval = tmr;
+                overflow.write(true);                
+            } else {
+                overflow.write(false);
+            }
         }
+    } else {
+        overflow.write(false);
     }
     out.write(tval);
 }

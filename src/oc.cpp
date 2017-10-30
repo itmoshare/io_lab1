@@ -12,7 +12,9 @@ Oc::Oc(sc_module_name nm, int32_t addr_offset)
     wr_i("wr_i"),
     timer1_in("timer1_in"),
     timer2_in("timer2_in"),
-    outs("outs")
+    outs("outs"),
+    overflow_t1("overflow_t1"),
+    overflow_t2("overflow_t2")    
 {
     data_bo.initialize(0);
     outs.initialize(false);
@@ -77,20 +79,16 @@ void Oc::handle_tick()
                 outs.write(!outs.read());
             break;
         case 4:
-            if (last_mode != mode)
+            if (last_mode != mode  || (overflow_t1.read() && bit3 == 0) || (overflow_t2.read() && bit3 == 1))
                 outs.write(false);
             if (timer == ocr)
                 outs.write(true);
-            if (timer > ocr)
-                outs.write(false);
             break;
         case 5:
-            if (last_mode != mode)
+            if (last_mode != mode || (overflow_t1.read() && bit3 == 0) || (overflow_t2.read() && bit3 == 1))
                 outs.write(true);
             if (timer == ocr)
                 outs.write(false);
-            if (timer > ocr)
-                outs.write(true);
             break;
     }
     last_mode = mode;
